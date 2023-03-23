@@ -39,14 +39,17 @@ function ContactForm() {
   );
 
   function handleFirstNameChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const re = /^[0-9a-zA-Z/\b]+$/;
+    const re = /^[0-9a-zA-Z /\b]+$/;
     if (event.target.value === "" || re.test(event.target.value)) {
       setFirstName(event.target.value);
     }
   }
 
   function handleLastNameChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setLastName(event.target.value);
+    const re = /^[0-9a-zA-Z /\b]+$/;
+    if (event.target.value === "" || re.test(event.target.value)) {
+      setLastName(event.target.value);
+    }
   }
 
   function handlePhoneInputChange(
