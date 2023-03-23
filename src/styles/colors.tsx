@@ -1,5 +1,5 @@
 const colors = {
-    primary: "#B9A0FF",
+    primary: "#f79623",
     secondary: "#fdc746",
     danger: "#ff6d5a",
     red: "#f56856",
@@ -10,7 +10,8 @@ const colors = {
     space_grey: "#888888",
     lighter_grey: "#d7d7d7",
     lightest_grey: "#f1f1f1",
-    card:"#282A3A",
+    input:"#A7A7A7",
+    card:"#191919",
 };
 
 export default colors

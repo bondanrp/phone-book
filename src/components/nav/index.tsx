@@ -1,8 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import React from "react";
 import { css } from "@emotion/react";
-import { getName, hexToHSL } from "../../helper/functions";
-import seedColor from "seed-color";
 import colors from "../../styles/colors";
 import { useLocation } from "react-router";
 import { Link } from "react-router-dom";
@@ -17,10 +14,13 @@ const styles = css`
   display: flex;
   align-items: center;
   justify-content: center;
+  background:black;
+  z-index:2;
   h3 {
     color: ${colors.primary};
     margin-bottom: 0;
     font-weight:bold;
+    letter-spacing: 4px;
   }
   a{
     position:absolute;

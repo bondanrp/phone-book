@@ -5,9 +5,9 @@ import { css } from "@emotion/react";
 import colors from "../../styles/colors";
 
 interface InputProps {
-  label: string;
-  name: string;
-  type: string;
+  label?: string;
+  name?: string;
+  type?: string;
   placeholder?: string;
   value: string | number | readonly string[] | undefined;
   required?: boolean;
@@ -23,9 +23,10 @@ const inputStyle = css`
   outline: none;
   font-size: 1rem;
   color: ${colors.light_grey};
+  background:${colors.dark_grey};
   flex-grow: 1;
   &::placeholder {
-    color: ${colors.dark_grey};
+    color: ${colors.input};
   }
   &:focus {
    border:1px solid ${colors.primary}
