@@ -28,11 +28,26 @@ interface Contact {
   last_name: string;
   phones: { number: string }[];
 }
+type AddContactData = {
+  insert_contact: {
+    returning: {
+      id: number;
+      first_name: string;
+      last_name: string;
+      phones: {
+        number: string;
+      }[];
+    }[];
+  };
+};
 
 const ContactList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useLocalStorage("favorites", []);
   const [deleteContact] = useMutation(mutation.DELETE_CONTACT, {});
+  const [addContact] = useMutation<AddContactData>(
+    mutation.ADD_CONTACT_WITH_PHONES_MUTATION
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 1000);
   const { error, data, refetch } = useQuery(queries.GET_CONTACT_LIST, {
@@ -97,6 +112,33 @@ const ContactList: React.FC = () => {
       console.error(error);
     }
   };
+  const handleDeleteFromFavorite = async (id: number) => {
+    try {
+      const newFavorite = JSON.parse(JSON.stringify(favorites));
+      let index = newFavorite.map((v: { id: number }) => v.id).indexOf(id);
+      console.log(newFavorite[index].first_name);
+      let firstName = newFavorite[index].first_name;
+      let lastName = newFavorite[index].last_name;
+      let phones = newFavorite[index].phones.map((v: { number: number }) => ({
+        number: v.number,
+      }));
+      await addContact({
+        variables: {
+          first_name: firstName,
+          last_name: lastName,
+          phones,
+        },
+      });
+      newFavorite.splice(index, 1);
+      toast.success(
+        `${firstName} ${lastName} have been removed from favorites`
+      );
+      refetch();
+      setFavorites(newFavorite);
+    } catch (error3) {
+      console.error(error3);
+    }
+  };
 
   const handleDelete = async (id: number) => {
     try {
@@ -145,24 +187,49 @@ const ContactList: React.FC = () => {
             let fullName = `${v.first_name} ${v.last_name}`;
 
             return (
-              <Link
-                key={v.id}
-                className="text-decoration-none text"
-                to={`/detail/${v.id}`}
-              >
-                <Card small className="mb-2">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div className="d-flex align-items-center">
-                      <ContactIcon small>{fullName}</ContactIcon>
+              <Card key={v.id} small className="mb-2">
+                <div
+                  css={css`
+                    button {
+                      display: none;
+                    }
+                    &:hover {
+                      button {
+                        display: block;
+                      }
+                    }
+                  `}
+                  className="d-flex align-items-center justify-content-between"
+                >
+                  <Link
+                    className="text-decoration-none text d-flex align-items-center justify-content-between"
+                    to={`/detail/${v.id}`}
+                  >
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center">
+                        <ContactIcon small>{fullName}</ContactIcon>
 
-                      <p className="mb-0 ms-2">
-                        {v.first_name}{" "}
-                        <span className="fw-bold">{v.last_name}</span>
-                      </p>
+                        <p className="mb-0 ms-2">
+                          {v.first_name}{" "}
+                          <span className="fw-bold">{v.last_name}</span>
+                        </p>
+                      </div>
                     </div>
+                  </Link>
+                  <div className="d-flex justify-content-center align-items-center">
+                    <Button
+                      className="me-2"
+                      onClick={() => {
+                        handleDeleteFromFavorite(v.id);
+                      }}
+                      small
+                      color="orange"
+                    >
+                      <FontAwesomeIcon size="xs" icon={faStar} />
+                    </Button>
                   </div>
-                </Card>
-              </Link>
+                </div>
+              </Card>
             );
           })
         ) : (
@@ -203,8 +270,8 @@ const ContactList: React.FC = () => {
                     </p>
                   </Link>
                   <div className="d-flex justify-content-center align-items-center">
-                    <Button 
-                    className="me-2"
+                    <Button
+                      className="me-2"
                       onClick={() => {
                         handleAddFavorites(v.id, v.phones);
                       }}

@@ -22,20 +22,36 @@ type ContactDetailData = {
     }[];
   };
 };
+type AddContactData = {
+  insert_contact: {
+    returning: {
+      id: number;
+      first_name: string;
+      last_name: string;
+      phones: {
+        number: string;
+      }[];
+    }[];
+  };
+};
 
 const ContactDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [confirmation, setConfirmation] = useState(false);
-  const [deleteContact] = useMutation(mutation.DELETE_CONTACT, {});
   const [favorites, setFavorites] = useLocalStorage("favorites", []);
+
+  const [deleteContact] = useMutation(mutation.DELETE_CONTACT, {});
+  const [addContact] = useMutation<AddContactData>(
+    mutation.ADD_CONTACT_WITH_PHONES_MUTATION
+  );
   const favoriteData: ContactDetailData = {
     contact_by_pk: favorites.find(
-      (v: { id: string  }) => id === v.id.toString()
+      (v: { id: string }) => id === v.id.toString()
     ),
   };
-  const isFavorite = favorites.map((v: { id: number }) => v.id.toString())
-  .indexOf(id) !== -1
+  const isFavorite =
+    favorites.map((v: { id: number }) => v.id.toString()).indexOf(id) !== -1;
   const { loading, error, data } = useQuery<ContactDetailData>(
     queries.GET_CONTACT_DETAIL,
     {
@@ -56,7 +72,7 @@ const ContactDetail = () => {
     try {
       let { data } = await deleteContact({ variables: { id } });
       let { delete_contact_by_pk } = data;
-      setFavorites([...favorites, {...delete_contact_by_pk, phones}]);
+      setFavorites([...favorites, { ...delete_contact_by_pk, phones }]);
       toast.success(`${fullName} has been added to favorites`);
       navigate("/");
     } catch (error) {
@@ -68,9 +84,18 @@ const ContactDetail = () => {
     let index = newFavorite
       .map((v: { id: number }) => v.id.toString())
       .indexOf(id);
+    await addContact({
+      variables: {
+        first_name: newFavorite[index].first_name,
+        last_name: newFavorite[index].last_name,
+        phones: newFavorite[index].phones.map((v: { number: number }) => ({
+          number: v.number,
+        })),
+      },
+    });
     newFavorite.splice(index, 1);
     toast.success(`${fullName} have been removed from favorites`);
-    setFavorites(newFavorite)
+    setFavorites(newFavorite);
     navigate("/");
   };
   const handleDelete = async () => {
@@ -95,7 +120,9 @@ const ContactDetail = () => {
             Add to Favorite
           </Button>
         ) : (
-          <Button color="dark_grey">Favorited</Button>
+          <Button onClick={handleDeleteFromFavorite} color="dark_grey">
+            Favorited
+          </Button>
         )}
       </div>
       {phones &&
@@ -122,20 +149,18 @@ const ContactDetail = () => {
               Cancel
             </Button>
           )}
-          <Button
-            className="ms-2"
-            onClick={() => {
-              if (isFavorite) {
-                handleDeleteFromFavorite();
-              } else {
+          {!isFavorite && (
+            <Button
+              className="ms-2"
+              onClick={() => {
                 !confirmation ? setConfirmation(true) : handleDelete();
-              }
-            }}
-            color="danger"
-            outlined
-          >
-            Delete Contact
-          </Button>
+              }}
+              color="danger"
+              outlined
+            >
+              Delete Contact
+            </Button>
+          )}
         </div>
       </div>
     </div>
